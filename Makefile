@@ -61,4 +61,8 @@ watch:
             fi; \
         fi
 
-.PHONY: all build run test clean watch docker-run docker-down itest
+.PHONY: all build run test clean watch docker-run docker-down itest swagger
+
+# Generate Swagger docs
+swagger:
+	swag init -g cmd/api/main.go -o docs --parseDependency --parseInternal

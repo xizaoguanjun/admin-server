@@ -8,9 +8,11 @@ services:
       MYSQL_PASSWORD: ${BLUEPRINT_DB_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${BLUEPRINT_DB_ROOT_PASSWORD}
     ports:
-      - "${BLUEPRINT_DB_PORT}:3306"
+      - "${BLUEPRINT_DB_PORT}:3307"
     volumes:
-      - mysql_volume_bp:/var/lib/mysql
+      - mysql_volume_bp:/var/lib/admin
 
 volumes:
   mysql_volume_bp:
+
+  

@@ -1,3 +1,12 @@
+// @title           Admin Server API
+// @version         1.0
+// @description     后台管理系统 API
+// @host            localhost:8080
+// @BasePath        /
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description     格式: Bearer {accessToken}
 package main
 
 import (
@@ -9,6 +18,7 @@ import (
 	"syscall"
 	"time"
 
+	_ "admin-server/docs"
 	"admin-server/internal/server"
 )
 
@@ -38,7 +48,6 @@ func gracefulShutdown(apiServer *http.Server, done chan bool) {
 }
 
 func main() {
-
 	server := server.NewServer()
 
 	// Create a done channel to signal when the shutdown is complete

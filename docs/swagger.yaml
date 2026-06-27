@@ -1,0 +1,484 @@
+basePath: /
+definitions:
+  admin-server_internal_model.CreateUserReq:
+    properties:
+      avatar:
+        type: string
+      email:
+        type: string
+      nickname:
+        type: string
+      password:
+        minLength: 6
+        type: string
+      phone:
+        type: string
+      roles:
+        type: string
+      status:
+        type: integer
+      username:
+        maxLength: 50
+        minLength: 3
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  admin-server_internal_model.LoginReq:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  admin-server_internal_model.LoginResp:
+    properties:
+      accessToken:
+        type: string
+      avatar:
+        type: string
+      expires:
+        type: string
+      nickname:
+        type: string
+      permissions:
+        items:
+          type: string
+        type: array
+      refreshToken:
+        type: string
+      roles:
+        items:
+          type: string
+        type: array
+      username:
+        type: string
+    type: object
+  admin-server_internal_model.PageResult:
+    properties:
+      list: {}
+      page:
+        type: integer
+      pageSize:
+        type: integer
+      total:
+        type: integer
+    type: object
+  admin-server_internal_model.RegisterReq:
+    properties:
+      avatar:
+        type: string
+      nickname:
+        type: string
+      password:
+        minLength: 6
+        type: string
+      phone:
+        type: string
+      username:
+        maxLength: 50
+        minLength: 3
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  admin-server_internal_model.UpdateUserReq:
+    properties:
+      avatar:
+        type: string
+      email:
+        type: string
+      nickname:
+        type: string
+      phone:
+        type: string
+      roles:
+        type: string
+      status:
+        description: 用指针区分"未传"和"传了0（禁用）"
+        type: integer
+    type: object
+  admin-server_internal_model.User:
+    properties:
+      avatar:
+        type: string
+      createdAt:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      nickname:
+        type: string
+      phone:
+        type: string
+      roles:
+        type: string
+      status:
+        type: integer
+      updatedAt:
+        type: string
+      username:
+        type: string
+    type: object
+  internal_handler.ErrorRespWrapper:
+    properties:
+      code:
+        example: A0400
+        type: string
+      data: {}
+      message:
+        type: string
+    type: object
+  internal_handler.LoginRespWrapper:
+    properties:
+      code:
+        example: "00000"
+        type: string
+      data:
+        $ref: '#/definitions/admin-server_internal_model.LoginResp'
+      message:
+        example: success
+        type: string
+    type: object
+  internal_handler.MsgRespWrapper:
+    properties:
+      code:
+        example: "00000"
+        type: string
+      data: {}
+      message:
+        example: 操作成功
+        type: string
+    type: object
+  internal_handler.PageRespWrapper:
+    properties:
+      code:
+        example: "00000"
+        type: string
+      data:
+        $ref: '#/definitions/admin-server_internal_model.PageResult'
+      message:
+        example: success
+        type: string
+    type: object
+  internal_handler.RegisterRespWrapper:
+    properties:
+      code:
+        example: "00000"
+        type: string
+      data:
+        properties:
+          id:
+            type: integer
+          username:
+            type: string
+        type: object
+      message:
+        example: 注册成功
+        type: string
+    type: object
+  internal_handler.UploadRespWrapper:
+    properties:
+      code:
+        example: "00000"
+        type: string
+      data:
+        properties:
+          url:
+            example: /uploads/avatars/xxx.png
+            type: string
+        type: object
+      message:
+        example: success
+        type: string
+    type: object
+  internal_handler.UserRespWrapper:
+    properties:
+      code:
+        example: "00000"
+        type: string
+      data:
+        $ref: '#/definitions/admin-server_internal_model.User'
+      message:
+        example: success
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: 后台管理系统 API
+  title: Admin Server API
+  version: "1.0"
+paths:
+  /:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: 根路径
+      tags:
+      - 系统
+  /api/auth/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 登录参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/admin-server_internal_model.LoginReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler.LoginRespWrapper'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorRespWrapper'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorRespWrapper'
+      summary: 用户登录
+      tags:
+      - 认证
+  /api/auth/register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 注册参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/admin-server_internal_model.RegisterReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler.RegisterRespWrapper'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorRespWrapper'
+      summary: 用户注册
+      tags:
+      - 认证
+  /api/upload/avatar:
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: 头像文件
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler.UploadRespWrapper'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorRespWrapper'
+      security:
+      - BearerAuth: []
+      summary: 上传头像
+      tags:
+      - 文件上传
+  /api/users:
+    get:
+      parameters:
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: pageSize
+        type: integer
+      - description: 用户名筛选
+        in: query
+        name: username
+        type: string
+      - description: 状态筛选
+        in: query
+        name: status
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler.PageRespWrapper'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorRespWrapper'
+      security:
+      - BearerAuth: []
+      summary: 用户列表
+      tags:
+      - 用户管理
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 创建参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/admin-server_internal_model.CreateUserReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler.UserRespWrapper'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorRespWrapper'
+      security:
+      - BearerAuth: []
+      summary: 创建用户
+      tags:
+      - 用户管理
+  /api/users/{id}:
+    delete:
+      parameters:
+      - description: 用户 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler.MsgRespWrapper'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorRespWrapper'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorRespWrapper'
+      security:
+      - BearerAuth: []
+      summary: 删除用户
+      tags:
+      - 用户管理
+    get:
+      parameters:
+      - description: 用户 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler.UserRespWrapper'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorRespWrapper'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorRespWrapper'
+      security:
+      - BearerAuth: []
+      summary: 查询用户详情
+      tags:
+      - 用户管理
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 用户 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 更新参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/admin-server_internal_model.UpdateUserReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler.UserRespWrapper'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorRespWrapper'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorRespWrapper'
+      security:
+      - BearerAuth: []
+      summary: 更新用户
+      tags:
+      - 用户管理
+  /health:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: 健康检查
+      tags:
+      - 系统
+securityDefinitions:
+  BearerAuth:
+    description: '格式: Bearer {accessToken}'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
