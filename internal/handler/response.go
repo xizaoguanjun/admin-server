@@ -106,3 +106,31 @@ type ErrorRespWrapper struct {
 type HealthRespWrapper struct {
 	Message string `json:"message" example:"OK"`
 }
+
+// FolderRespWrapper 单个文件夹响应包装。
+type FolderRespWrapper struct {
+	Code    string           `json:"code" example:"00000"`
+	Message string           `json:"message" example:"success"`
+	Data    model.FileFolder `json:"data"`
+}
+
+// FolderTreeRespWrapper 文件夹树响应包装。
+type FolderTreeRespWrapper struct {
+	Code    string                  `json:"code" example:"00000"`
+	Message string                  `json:"message" example:"success"`
+	Data    []*model.FolderTreeNode `json:"data"`
+}
+
+// FileRespWrapper 单个文件响应包装。
+type FileRespWrapper struct {
+	Code    string           `json:"code" example:"00000"`
+	Message string           `json:"message" example:"success"`
+	Data    model.FileRecord `json:"data"`
+}
+
+// ChunkStatusRespWrapper 分片状态响应包装。
+type ChunkStatusRespWrapper struct {
+	Code    string               `json:"code" example:"00000"`
+	Message string               `json:"message" example:"success"`
+	Data    model.ChunkStatusResp `json:"data"`
+}

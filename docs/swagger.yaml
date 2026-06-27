@@ -1,5 +1,23 @@
 basePath: /
 definitions:
+  admin-server_internal_model.ChunkStatusResp:
+    properties:
+      uploadedChunks:
+        items:
+          type: integer
+        type: array
+    type: object
+  admin-server_internal_model.CreateFolderReq:
+    properties:
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+      parentId:
+        type: integer
+    required:
+    - name
+    type: object
   admin-server_internal_model.CreateUserReq:
     properties:
       avatar:
@@ -24,6 +42,59 @@ definitions:
     required:
     - password
     - username
+    type: object
+  admin-server_internal_model.FileFolder:
+    properties:
+      createdAt:
+        type: string
+      createdBy:
+        type: integer
+      id:
+        type: integer
+      name:
+        type: string
+      parentId:
+        type: integer
+      updatedAt:
+        type: string
+    type: object
+  admin-server_internal_model.FileRecord:
+    properties:
+      createdAt:
+        type: string
+      folderId:
+        type: integer
+      id:
+        type: integer
+      mimeType:
+        type: string
+      originalName:
+        type: string
+      size:
+        type: integer
+      status:
+        type: string
+      storedName:
+        type: string
+      updatedAt:
+        type: string
+      uploaderId:
+        type: integer
+      url:
+        type: string
+    type: object
+  admin-server_internal_model.FolderTreeNode:
+    properties:
+      children:
+        items:
+          $ref: '#/definitions/admin-server_internal_model.FolderTreeNode'
+        type: array
+      id:
+        type: integer
+      name:
+        type: string
+      parentId:
+        type: integer
     type: object
   admin-server_internal_model.LoginReq:
     properties:
@@ -58,6 +129,25 @@ definitions:
       username:
         type: string
     type: object
+  admin-server_internal_model.MergeFileReq:
+    properties:
+      fileId:
+        type: string
+      fileName:
+        type: string
+      folderId:
+        type: integer
+      mimeType:
+        type: string
+      totalChunks:
+        minimum: 1
+        type: integer
+    required:
+    - fileId
+    - fileName
+    - folderId
+    - totalChunks
+    type: object
   admin-server_internal_model.PageResult:
     properties:
       list: {}
@@ -86,6 +176,13 @@ definitions:
     required:
     - password
     - username
+    type: object
+  admin-server_internal_model.UpdateFolderReq:
+    properties:
+      name:
+        type: string
+      parentId:
+        type: integer
     type: object
   admin-server_internal_model.UpdateUserReq:
     properties:
@@ -126,6 +223,17 @@ definitions:
       username:
         type: string
     type: object
+  internal_handler.ChunkStatusRespWrapper:
+    properties:
+      code:
+        example: "00000"
+        type: string
+      data:
+        $ref: '#/definitions/admin-server_internal_model.ChunkStatusResp'
+      message:
+        example: success
+        type: string
+    type: object
   internal_handler.ErrorRespWrapper:
     properties:
       code:
@@ -133,6 +241,41 @@ definitions:
         type: string
       data: {}
       message:
+        type: string
+    type: object
+  internal_handler.FileRespWrapper:
+    properties:
+      code:
+        example: "00000"
+        type: string
+      data:
+        $ref: '#/definitions/admin-server_internal_model.FileRecord'
+      message:
+        example: success
+        type: string
+    type: object
+  internal_handler.FolderRespWrapper:
+    properties:
+      code:
+        example: "00000"
+        type: string
+      data:
+        $ref: '#/definitions/admin-server_internal_model.FileFolder'
+      message:
+        example: success
+        type: string
+    type: object
+  internal_handler.FolderTreeRespWrapper:
+    properties:
+      code:
+        example: "00000"
+        type: string
+      data:
+        items:
+          $ref: '#/definitions/admin-server_internal_model.FolderTreeNode'
+        type: array
+      message:
+        example: success
         type: string
     type: object
   internal_handler.LoginRespWrapper:
@@ -284,6 +427,379 @@ paths:
       summary: 用户注册
       tags:
       - 认证
+  /api/files:
+    get:
+      parameters:
+      - description: 文件夹ID
+        in: query
+        name: folderId
+        required: true
+        type: integer
+      - description: 文件名关键词
+        in: query
+        name: keyword
+        type: string
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler.PageRespWrapper'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorRespWrapper'
+      security:
+      - BearerAuth: []
+      summary: 文件列表
+      tags:
+      - 文件管理
+  /api/files/{id}:
+    delete:
+      parameters:
+      - description: 文件ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler.MsgRespWrapper'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorRespWrapper'
+      security:
+      - BearerAuth: []
+      summary: 删除文件
+      tags:
+      - 文件管理
+    get:
+      parameters:
+      - description: 文件ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler.FileRespWrapper'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorRespWrapper'
+      security:
+      - BearerAuth: []
+      summary: 文件详情
+      tags:
+      - 文件管理
+  /api/files/{id}/download:
+    get:
+      parameters:
+      - description: 文件ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorRespWrapper'
+      security:
+      - BearerAuth: []
+      summary: 文件下载
+      tags:
+      - 文件管理
+  /api/files/{id}/preview:
+    get:
+      parameters:
+      - description: 文件ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorRespWrapper'
+      security:
+      - BearerAuth: []
+      summary: 文件预览
+      tags:
+      - 文件管理
+  /api/files/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: 文件
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: 文件夹ID
+        in: formData
+        name: folderId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler.FileRespWrapper'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorRespWrapper'
+      security:
+      - BearerAuth: []
+      summary: 普通文件上传
+      tags:
+      - 文件管理
+  /api/files/upload/chunk:
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: 分片数据
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: 上传会话ID
+        in: formData
+        name: fileId
+        required: true
+        type: string
+      - description: 原始文件名
+        in: formData
+        name: fileName
+        required: true
+        type: string
+      - description: 分片索引
+        in: formData
+        name: chunkIndex
+        required: true
+        type: integer
+      - description: 总分片数
+        in: formData
+        name: totalChunks
+        required: true
+        type: integer
+      - description: 文件夹ID
+        in: formData
+        name: folderId
+        required: true
+        type: integer
+      - description: MIME类型
+        in: formData
+        name: mimeType
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler.MsgRespWrapper'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorRespWrapper'
+      security:
+      - BearerAuth: []
+      summary: 分片上传
+      tags:
+      - 文件管理
+  /api/files/upload/chunk/status:
+    get:
+      parameters:
+      - description: 上传会话ID
+        in: query
+        name: fileId
+        required: true
+        type: string
+      - description: 总分片数
+        in: query
+        name: totalChunks
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler.ChunkStatusRespWrapper'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorRespWrapper'
+      security:
+      - BearerAuth: []
+      summary: 分片上传状态
+      tags:
+      - 文件管理
+  /api/files/upload/merge:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 合并参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/admin-server_internal_model.MergeFileReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler.FileRespWrapper'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorRespWrapper'
+      security:
+      - BearerAuth: []
+      summary: 合并分片
+      tags:
+      - 文件管理
+  /api/folders:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 创建参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/admin-server_internal_model.CreateFolderReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler.FolderRespWrapper'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorRespWrapper'
+      security:
+      - BearerAuth: []
+      summary: 创建文件夹
+      tags:
+      - 文件管理
+  /api/folders/{id}:
+    delete:
+      parameters:
+      - description: 文件夹ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler.MsgRespWrapper'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorRespWrapper'
+      security:
+      - BearerAuth: []
+      summary: 删除文件夹
+      tags:
+      - 文件管理
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 文件夹ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 更新参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/admin-server_internal_model.UpdateFolderReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler.FolderRespWrapper'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorRespWrapper'
+      security:
+      - BearerAuth: []
+      summary: 更新文件夹
+      tags:
+      - 文件管理
+  /api/folders/tree:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler.FolderTreeRespWrapper'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorRespWrapper'
+      security:
+      - BearerAuth: []
+      summary: 文件夹树
+      tags:
+      - 文件管理
   /api/upload/avatar:
     post:
       consumes:

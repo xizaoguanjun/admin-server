@@ -66,6 +66,17 @@ func (s *Server) RegisterRoutes() http.Handler {
 	userHandler := handler.NewUserHandler(userRepo)
 	uploadHandler := handler.NewUploadHandler("./uploads/avatars")
 
+	folderRepo := repository.NewFolderRepository(s.db.GetDB())
+	if err := folderRepo.InitTable(); err != nil {
+		log.Fatalf("failed to init file_folders table: %v", err)
+	}
+	fileRepo := repository.NewFileRepository(s.db.GetDB())
+	if err := fileRepo.InitTable(); err != nil {
+		log.Fatalf("failed to init files table: %v", err)
+	}
+	folderHandler := handler.NewFolderHandler(folderRepo, fileRepo)
+	fileHandler := handler.NewFileHandler(fileRepo, folderRepo, "./uploads")
+
 	// 所有业务接口统一挂载在 /api 前缀下，便于区分 API 和静态资源
 	api := r.Group("/api")
 	{
@@ -93,6 +104,31 @@ func (s *Server) RegisterRoutes() http.Handler {
 			users.GET("/:id", userHandler.GetByID)   // 查询单个用户
 			users.PUT("/:id", userHandler.Update)    // 更新用户信息
 			users.DELETE("/:id", userHandler.Delete) // 删除用户（软删除）
+		}
+
+		// 文件夹管理接口
+		folders := api.Group("/folders")
+		folders.Use(middleware.JWTAuth())
+		{
+			folders.GET("/tree", folderHandler.GetTree)
+			folders.POST("", folderHandler.Create)
+			folders.PUT("/:id", folderHandler.Update)
+			folders.DELETE("/:id", folderHandler.Delete)
+		}
+
+		// 文件管理接口
+		files := api.Group("/files")
+		files.Use(middleware.JWTAuth())
+		{
+			files.GET("", fileHandler.List)
+			files.POST("/upload", fileHandler.Upload)
+			files.POST("/upload/chunk", fileHandler.UploadChunk)
+			files.GET("/upload/chunk/status", fileHandler.ChunkStatus)
+			files.POST("/upload/merge", fileHandler.Merge)
+			files.GET("/:id", fileHandler.GetByID)
+			files.GET("/:id/preview", fileHandler.Preview)
+			files.GET("/:id/download", fileHandler.Download)
+			files.DELETE("/:id", fileHandler.Delete)
 		}
 	}
 
